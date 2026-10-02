@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matriz de Comparação</title>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #007BEA;
+    --accent-dark: #001B71;
+    --accent-light: #B3DFFF;
+    --text: #210000;
+    --text-light: #666666;
+    --border: #e0e0e0;
+    --bg: #f5f7fa;
+    --bg-soft: #f4f8fe;
+    --selected-bg: #ebf5ff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Aptos', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+    line-height: 1.5;
+    text-align: left;
+  }
+  h1, h2, h3 { font-family: 'Raleway', sans-serif; font-weight: 800; color: var(--text); }
+  .container { max-width: 960px; margin: 0 auto; }
+
+  .header { display: flex; align-items: center; padding: 8px 0 20px; }
+  .header img { height: 30px; display: block; }
+  h1 { font-size: clamp(24px, 5vw, 32px); color: var(--accent); margin-bottom: 20px; line-height: 1.2; }
+
+  .card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border); }
+  .card h2 { font-size: 18px; margin-bottom: 16px; }
+  .card h2.tight { margin-bottom: 4px; }
+  .sub { font-size: 14px; color: var(--text-light); margin-bottom: 16px; }
+
+  /* Passos */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .step { display: flex; gap: 12px; align-items: flex-start; }
+  .step .n { flex: 0 0 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-family: 'Raleway', sans-serif; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .step p { font-size: 15px; }
+
+  /* Matriz */
+  .scroll { overflow-x: auto; }
+  table { border-collapse: separate; border-spacing: 4px; width: 100%; min-width: 620px; table-layout: fixed; }
+  th, td { border-radius: 8px; padding: 0; text-align: left; vertical-align: middle; }
+  th.crit { background: var(--accent); position: relative; padding: 6px; }
+  th.total-h { background: var(--accent-dark); color: #fff; font-family: 'Raleway', sans-serif; font-weight: 700; font-size: 15px; padding: 12px; width: 110px; text-align: left; }
+  th.corner { width: 180px; background: transparent; }
+  th.peso-l, td.peso-l { background: var(--accent-light); font-family: 'Raleway', sans-serif; font-weight: 700; font-size: 14px; padding: 8px 12px; }
+  td.peso-c { background: var(--accent-light); padding: 6px; }
+  td.peso-t { background: var(--accent-light); }
+  td.alt { background: var(--accent-dark); padding: 6px; position: relative; }
+  td.cell { background: var(--bg-soft); padding: 6px; border: 1px solid var(--border); }
+  td.score { background: var(--selected-bg); font-family: 'Raleway', sans-serif; font-weight: 800; font-size: 22px; padding: 12px; border: 1px solid var(--border); color: var(--text); }
+  tr.winner td.cell, tr.winner td.score { background: var(--accent-light); border-color: var(--accent); }
+
+  input[type=text] {
+    width: 100%; font: inherit; color: var(--text); background: #fff;
+    border: 1.5px solid transparent; border-radius: 6px; padding: 9px 10px;
+    transition: border-color .3s ease, box-shadow .3s ease;
+  }
+  input[type=text]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,123,234,.25); }
+  th.crit input { background: transparent; color: #fff; font-family: 'Raleway', sans-serif; font-weight: 700; font-size: 15px; padding-right: 26px; }
+  th.crit input::placeholder, td.alt input::placeholder { color: rgba(255,255,255,.7); }
+  th.crit input:focus, td.alt input:focus { background: rgba(255,255,255,.15); border-color: #fff; box-shadow: none; }
+  td.alt input { background: transparent; color: #fff; font-family: 'Raleway', sans-serif; font-weight: 700; font-size: 15px; padding-right: 26px; }
+  input.num { text-align: center; font-family: 'Raleway', sans-serif; font-weight: 700; font-size: 18px; background: #fff; border-color: var(--border); }
+  td.peso-c input.num { border-color: transparent; }
+
+  .x { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border: none; border-radius: 50%; background: rgba(255,255,255,.2); color: #fff; font-size: 14px; line-height: 1; cursor: pointer; transition: background .3s ease; }
+  td.alt .x { top: 50%; transform: translateY(-50%); }
+  .x:hover { background: rgba(255,255,255,.45); }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .btn { background: var(--accent); color: #fff; font-family: 'Raleway', sans-serif; font-weight: 700; font-size: 15px; border: 1.5px solid var(--accent); border-radius: 8px; padding: 12px 24px; cursor: pointer; transition: background .3s ease; }
+  .btn:hover { background: #0063c5; }
+  .btn.ghost { background: #fff; color: var(--text); border-color: var(--border); }
+  .btn.ghost:hover { background: var(--bg-soft); }
+
+  /* Resultado */
+  .progress { background: var(--bg-soft); border-radius: 12px; padding: 20px; }
+  .bar { height: 10px; background: var(--border); border-radius: 8px; margin-top: 10px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); transition: width .3s ease; }
+  .rcard { border: 1.5px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; }
+  .rcard.first { border-color: var(--accent); background: var(--selected-bg); }
+  .rcard .hd { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .rcard.first .hd { color: var(--accent); }
+  .rcard h3 { font-size: 18px; margin-bottom: 8px; overflow-wrap: anywhere; }
+  .rcard .tr { height: 10px; background: var(--border); border-radius: 8px; overflow: hidden; }
+  .rcard .tr i { display: block; height: 100%; background: #999; border-radius: 8px; transition: width .3s ease; }
+  .rcard.first .tr i { background: var(--accent); }
+  .rcard .pts { font-size: 14px; margin-top: 8px; }
+  .note { font-size: 13px; color: var(--text-light); }
+
+  textarea { width: 100%; min-height: 96px; font: inherit; color: var(--text); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px; resize: vertical; }
+  textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,123,234,.25); }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent-dark); color: #fff; border-radius: 8px; padding: 10px 18px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .3s ease; }
+  .toast.on { opacity: 1; }
+
+  @media (max-width: 720px) {
+    .steps { grid-template-columns: 1fr; }
+    .card { padding: 18px 14px; }
+    th.corner, td.alt { width: 130px; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 16px 12px 40px; }
+    .btn { padding: 10px 14px; font-size: 14px; }
+  }
+
+  @media print {
+    @page { margin: -1px; }
+    body { background: #fff; padding: 24px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .header, .toolbar, .steps-card, .toast, .x { display: none !important; }
+    .card { break-inside: avoid; }
+    .scroll { overflow: visible; }
+    table { min-width: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header"><img src="https://i.imgur.com/XVfvmJy.png" alt="Crescimentum"></div>
+  <h1>Matriz de Comparação</h1>
+
+  <section class="card steps-card">
+    <h2>Como funciona</h2>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><p>Liste as alternativas e os critérios da decisão.</p></div>
+      <div class="step"><span class="n">2</span><p>Dê um peso de 1 a 5 a cada critério. Quanto maior, mais ele importa.</p></div>
+      <div class="step"><span class="n">3</span><p>Dê uma nota de 1 a 5 a cada alternativa em cada critério.</p></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Sua matriz</h2>
+    <div id="tableArea" class="scroll"></div>
+    <div class="toolbar">
+      <button class="btn" id="addAlt">+ Alternativa</button>
+      <button class="btn" id="addCrit">+ Critério</button>
+      <button class="btn ghost" id="example">Ver exemplo</button>
+      <button class="btn ghost" id="clear">Limpar tudo</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Resultado</h2>
+    <div id="result"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="tight">Anotações</h2>
+    <p class="sub">Registre o que a matriz mostrou e os próximos passos.</p>
+    <textarea id="notes" placeholder="Escreva aqui suas anotações"></textarea>
+    <div class="toolbar">
+      <button class="btn ghost" id="copy">Copiar resultado</button>
+      <button class="btn" id="print">Baixar em PDF</button>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  var MAX_ALT = 8, MAX_CRIT = 8, MIN = 2;
+  var state = blank();
+
+  function blank() {
+    return {
+      crit: [{ n: '', w: '' }, { n: '', w: '' }, { n: '', w: '' }, { n: '', w: '' }],
+      alts: [1, 2, 3].map(function () { return { n: '', s: ['', '', '', ''] }; })
+    };
+  }
+  function example() {
+    return {
+      crit: [{ n: 'Critério 1', w: '5' }, { n: 'Critério 2', w: '3' }, { n: 'Critério 3', w: '2' }, { n: 'Critério 4', w: '4' }],
+      alts: [
+        { n: 'Alternativa 1', s: ['5', '2', '3', '3'] },
+        { n: 'Alternativa 2', s: ['3', '4', '2', '5'] },
+        { n: 'Alternativa 3', s: ['1', '5', '3', '4'] }
+      ]
+    };
+  }
+
+  var area = document.getElementById('tableArea');
+  var resultEl = document.getElementById('result');
+
+  function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+  function altName(a, i) { return a.n.trim() || 'Alternativa ' + (i + 1); }
+  function critName(c, i) { return c.n.trim() || 'Critério ' + (i + 1); }
+  function valid(v) { return /^[1-5]$/.test(v); }
+
+  function build() {
+    var canRmC = state.crit.length > MIN, canRmA = state.alts.length > MIN;
+    var h = '<table><thead><tr><th class="corner"></th>';
+    state.crit.forEach(function (c, j) {
+      h += '<th class="crit"><input type="text" class="crit-name" data-c="' + j + '" value="' + esc(c.n) + '" placeholder="Critério ' + (j + 1) + '" aria-label="Nome do critério ' + (j + 1) + '">' +
+        (canRmC ? '<button class="x" data-rc="' + j + '" aria-label="Remover critério ' + (j + 1) + '">&times;</button>' : '') + '</th>';
+    });
+    h += '<th class="total-h">Pontuação</th></tr>';
+    h += '<tr><th class="peso-l">Peso (1 a 5)</th>';
+    state.crit.forEach(function (c, j) {
+      h += '<td class="peso-c"><input type="text" class="num wt-in" inputmode="numeric" maxlength="1" data-w="' + j + '" value="' + esc(c.w) + '" aria-label="Peso do critério ' + (j + 1) + '"></td>';
+    });
+    h += '<td class="peso-t"></td></tr></thead><tbody>';
+    state.alts.forEach(function (a, i) {
+      h += '<tr><td class="alt"><input type="text" class="alt-name" data-a="' + i + '" value="' + esc(a.n) + '" placeholder="Alternativa ' + (i + 1) + '" aria-label="Nome da alternativa ' + (i + 1) + '">' +
+        (canRmA ? '<button class="x" data-ra="' + i + '" aria-label="Remover alternativa ' + (i + 1) + '">&times;</button>' : '') + '</td>';
+      state.crit.forEach(function (c, j) {
+        h += '<td class="cell"><input type="text" class="num score-in" inputmode="numeric" maxlength="1" data-i="' + i + '" data-j="' + j + '" value="' + esc(a.s[j]) + '" aria-label="Nota da alternativa ' + (i + 1) + ' no critério ' + (j + 1) + '"></td>';
+      });
+      h += '<td class="score" data-total="' + i + '">-</td></tr>';
+    });
+    h += '</tbody></table>';
+    area.innerHTML = h;
+    update();
+  }
+
+  function compute() {
+    var weights = state.crit.map(function (c) { return valid(c.w) ? +c.w : null; });
+    var filled = 0, total = state.crit.length + state.alts.length * state.crit.length;
+    weights.forEach(function (w) { if (w !== null) filled++; });
+    var totals = state.alts.map(function (a) {
+      var sum = 0;
+      a.s.forEach(function (v, j) { if (valid(v)) { filled++; if (weights[j] !== null) sum += +v * weights[j]; } });
+      return sum;
+    });
+    var maxPts = 5 * weights.reduce(function (s, w) { return s + (w || 0); }, 0);
+    return { weights: weights, filled: filled, total: total, complete: filled === total, totals: totals, maxPts: maxPts };
+  }
+
+  function update() {
+    var r = compute();
+    var max = Math.max.apply(null, r.totals);
+    area.querySelectorAll('tbody tr').forEach(function (tr, i) {
+      tr.querySelector('[data-total]').textContent = r.complete ? r.totals[i] : '-';
+      tr.classList.toggle('winner', r.complete && r.totals[i] === max);
+    });
+    renderResult(r, max);
+  }
+
+  function renderResult(r, max) {
+    if (!r.complete) {
+      var pct = Math.round(r.filled / r.total * 100);
+      resultEl.innerHTML = '<div class="progress">O resultado aparece quando todos os pesos e notas estiverem preenchidos.<br><b>' + r.filled + ' de ' + r.total + ' campos preenchidos</b><div class="bar"><i style="width:' + pct + '%"></i></div></div>';
+      return;
+    }
+    var order = state.alts.map(function (a, i) { return { n: altName(a, i), p: r.totals[i] }; }).sort(function (a, b) { return b.p - a.p; });
+    var html = order.map(function (o, k) {
+      var first = o.p === max;
+      var pct = r.maxPts ? Math.round(o.p / r.maxPts * 100) : 0;
+      var label = first ? (order.filter(function (x) { return x.p === max; }).length > 1 ? 'Empate na 1ª posição' : '1º lugar') : (k + 1) + 'º lugar';
+      return '<div class="rcard ' + (first ? 'first' : '') + '"><div class="hd"><span>' + label + '</span><span>' + pct + '%</span></div><h3>' + esc(o.n) + '</h3><div class="tr"><i style="width:' + pct + '%"></i></div><p class="pts">' + o.p + ' pontos de ' + r.maxPts + ' possíveis</p></div>';
+    }).join('');
+    resultEl.innerHTML = html + '<p class="note">Pontuação máxima: nota 5 em todos os critérios, multiplicada pelos pesos.</p>';
+  }
+
+  function cleanDigit(el) {
+    var v = el.value.replace(/[^1-5]/g, '').slice(-1);
+    el.value = v; return v;
+  }
+  area.addEventListener('input', function (e) {
+    var el = e.target;
+    if (el.classList.contains('score-in')) state.alts[+el.dataset.i].s[+el.dataset.j] = cleanDigit(el);
+    else if (el.classList.contains('wt-in')) state.crit[+el.dataset.w].w = cleanDigit(el);
+    else if (el.classList.contains('crit-name')) state.crit[+el.dataset.c].n = el.value;
+    else if (el.classList.contains('alt-name')) state.alts[+el.dataset.a].n = el.value;
+    update();
+  });
+  area.addEventListener('click', function (e) {
+    var b = e.target.closest('.x'); if (!b) return;
+    if (b.dataset.rc !== undefined) {
+      var j = +b.dataset.rc;
+      state.crit.splice(j, 1);
+      state.alts.forEach(function (a) { a.s.splice(j, 1); });
+    } else if (b.dataset.ra !== undefined) {
+      state.alts.splice(+b.dataset.ra, 1);
+    }
+    build();
+  });
+
+  document.getElementById('addAlt').onclick = function () {
+    if (state.alts.length >= MAX_ALT) return toast('Máximo de ' + MAX_ALT + ' alternativas');
+    state.alts.push({ n: '', s: state.crit.map(function () { return ''; }) });
+    build();
+  };
+  document.getElementById('addCrit').onclick = function () {
+    if (state.crit.length >= MAX_CRIT) return toast('Máximo de ' + MAX_CRIT + ' critérios');
+    state.crit.push({ n: '', w: '' });
+    state.alts.forEach(function (a) { a.s.push(''); });
+    build();
+  };
+  document.getElementById('example').onclick = function () { state = example(); build(); toast('Exemplo carregado'); };
+  document.getElementById('clear').onclick = function () { state = blank(); document.getElementById('notes').value = ''; build(); };
+  document.getElementById('print').onclick = function () { window.print(); };
+
+  document.getElementById('copy').onclick = function () {
+    var r = compute();
+    if (!r.complete) return toast('Preencha todos os campos antes de copiar');
+    var order = state.alts.map(function (a, i) { return { n: altName(a, i), p: r.totals[i] }; }).sort(function (a, b) { return b.p - a.p; });
+    var txt = 'Matriz de Comparação\nCritérios (peso): ' + state.crit.map(function (c, j) { return critName(c, j) + ' (' + c.w + ')'; }).join(', ') + '\n\nResultado:\n' +
+      order.map(function (o, k) { return (k + 1) + '. ' + o.n + ': ' + o.p + ' pontos'; }).join('\n');
+    var notes = document.getElementById('notes').value.trim();
+    if (notes) txt += '\n\nAnotações:\n' + notes;
+    function ok() { toast('Resultado copiado'); }
+    function fallback() {
+      var t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); ok(); } catch (e) { toast('Não foi possível copiar'); }
+      document.body.removeChild(t);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, fallback); else fallback();
+  };
+
+  var tt;
+  function toast(msg) {
+    var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('on');
+    clearTimeout(tt); tt = setTimeout(function () { t.classList.remove('on'); }, 2200);
+  }
+
+  build();
+})();
+</script>
+</body>
+</html>
